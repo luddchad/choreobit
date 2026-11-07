@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": []
+  },
+  "include": ["test", "scripts", "eslint.config.js"],
+  "exclude": ["node_modules", "dist", "packages", "apps"]
+}

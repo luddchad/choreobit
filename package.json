@@ -1,0 +1,31 @@
+{
+  "name": "choreobit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ChoreoBit: a code-first animation framework for computer science education.",
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r --filter \"./packages/*\" typecheck",
+    "test": "vitest run",
+    "build": "pnpm -r --filter \"./packages/*\" build",
+    "clean": "pnpm -r exec rm -rf dist && rm -rf node_modules/.cache"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.1",
+    "prettier": "^3.4.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.56.0",
+    "vitest": "^2.1.9"
+  }
+}
