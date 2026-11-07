@@ -1,0 +1,19 @@
+{
+  "name": "@choreobit/renderer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ChoreoBit rendering abstractions and backend-agnostic scene rendering. No backend implementation yet.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luddchad/choreobit.git",
+    "directory": "packages/renderer"
+  },
+  "scripts": {
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@choreobit/core": "workspace:*"
+  }
+}

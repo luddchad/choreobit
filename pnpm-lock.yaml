@@ -194,6 +194,24 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@22.20.5)(supports-color@7.2.0)
 
+  packages/animation:
+    dependencies:
+      '@choreobit/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/authoring:
+    dependencies:
+      '@choreobit/animation':
+        specifier: workspace:*
+        version: link:../animation
+      '@choreobit/core':
+        specifier: workspace:*
+        version: link:../core
+      '@choreobit/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+
   packages/core:
     devDependencies:
       tsup:
@@ -202,6 +220,51 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+
+  packages/player:
+    dependencies:
+      '@choreobit/animation':
+        specifier: workspace:*
+        version: link:../animation
+      '@choreobit/core':
+        specifier: workspace:*
+        version: link:../core
+      '@choreobit/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+      '@choreobit/renderer':
+        specifier: workspace:*
+        version: link:../renderer
+
+  packages/primitives:
+    dependencies:
+      '@choreobit/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/react:
+    dependencies:
+      '@choreobit/player':
+        specifier: workspace:*
+        version: link:../player
+      react:
+        specifier: '>=18.0.0'
+        version: 19.3.1
+
+  packages/renderer:
+    dependencies:
+      '@choreobit/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/video:
+    dependencies:
+      '@choreobit/core':
+        specifier: workspace:*
+        version: link:../core
+      '@choreobit/renderer':
+        specifier: workspace:*
+        version: link:../renderer
 
 packages:
 
@@ -1237,6 +1300,10 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
+
+  react@19.3.1:
+    resolution: {integrity: sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw==}
+    engines: {node: '>=0.10.0'}
 
   readdirp@4.1.2:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
@@ -2326,6 +2393,8 @@ snapshots:
   prettier@3.9.10: {}
 
   punycode@2.3.1: {}
+
+  react@19.3.1: {}
 
   readdirp@4.1.2: {}
 

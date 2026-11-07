@@ -1,0 +1,20 @@
+{
+  "name": "@choreobit/video",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ChoreoBit video production: frame orchestration, audio/narration, and encoding. No implementation yet.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luddchad/choreobit.git",
+    "directory": "packages/video"
+  },
+  "scripts": {
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@choreobit/core": "workspace:*",
+    "@choreobit/renderer": "workspace:*"
+  }
+}

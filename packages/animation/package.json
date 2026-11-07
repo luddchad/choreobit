@@ -1,0 +1,19 @@
+{
+  "name": "@choreobit/animation",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ChoreoBit animation operations: interpolation, easing, transitions, and composition. No implementation yet.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luddchad/choreobit.git",
+    "directory": "packages/animation"
+  },
+  "scripts": {
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@choreobit/core": "workspace:*"
+  }
+}

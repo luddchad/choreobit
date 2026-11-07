@@ -37,5 +37,8 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Check dependency boundaries
+        run: pnpm check:deps
+
       - name: Build
         run: pnpm build

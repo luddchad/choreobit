@@ -1,0 +1,22 @@
+{
+  "name": "@choreobit/react",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Optional React integration for embedding ChoreoBit animations. No implementation yet.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luddchad/choreobit.git",
+    "directory": "packages/react"
+  },
+  "scripts": {
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "dependencies": {
+    "@choreobit/player": "workspace:*"
+  }
+}

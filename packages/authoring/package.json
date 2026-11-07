@@ -1,0 +1,21 @@
+{
+  "name": "@choreobit/authoring",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Developer-facing ChoreoBit authoring API: scene authoring and animation composition. No implementation yet.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luddchad/choreobit.git",
+    "directory": "packages/authoring"
+  },
+  "scripts": {
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@choreobit/animation": "workspace:*",
+    "@choreobit/core": "workspace:*",
+    "@choreobit/primitives": "workspace:*"
+  }
+}
