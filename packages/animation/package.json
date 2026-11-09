@@ -2,7 +2,7 @@
   "name": "@choreobit/animation",
   "version": "0.0.0",
   "private": true,
-  "description": "ChoreoBit animation operations: interpolation, easing, transitions, and composition. No implementation yet.",
+  "description": "ChoreoBit animation operations: scheduling, interpolation, easing, transitions, and composition.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -10,10 +10,28 @@
     "url": "https://github.com/luddchad/choreobit.git",
     "directory": "packages/animation"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@choreobit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3"
   }
 }
