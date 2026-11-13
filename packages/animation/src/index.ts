@@ -15,3 +15,21 @@
 export type { ScheduledNodeKind, ScheduledOperation, TimelineSchedule } from './scheduling/types';
 
 export { scheduleTimeline } from './scheduling/schedule';
+
+// Visual-state evaluation.
+export type {
+  EvaluatedObjectState,
+  EvaluatedVisualObject,
+  SceneEvaluation,
+  SceneVisualState,
+  SupportedOperationKind,
+} from './evaluation/types';
+
+export { SUPPORTED_OPERATION_KINDS } from './evaluation/types';
+
+export { EVALUATION_ERROR_CODES, EvaluationError } from './evaluation/error';
+export type { EvaluationErrorDetails, EvaluationErrorCode } from './evaluation/error';
+
+export { applyEasing, EASING_CURVES, clamp01 } from './evaluation/easing';
+export { lerp, lerpPosition, progressFor } from './evaluation/interpolation';
+export { evaluateScene, evaluateSceneAt } from './evaluation/evaluate';
