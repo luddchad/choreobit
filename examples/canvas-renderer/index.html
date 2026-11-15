@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChoreoBit Canvas Renderer</title>
+    <style>
+      body {
+        margin: 0;
+        background: #10131a;
+        color: #e8eaf0;
+        font-family: system-ui, sans-serif;
+      }
+      .stage {
+        display: flex;
+        justify-content: center;
+        padding: 24px;
+      }
+      canvas {
+        background: #1a1f2b;
+        border-radius: 8px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <canvas id="choreobit" width="480" height="320"></canvas>
+    </div>
+    <!-- Map the bare specifiers to the built packages. Build first:
+         pnpm build -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@choreobit/animation": "../../packages/animation/dist/index.js",
+          "@choreobit/renderer": "../../packages/renderer/dist/index.js"
+        }
+      }
+    </script>
+    <script type="module" src="./main.mjs"></script>
+  </body>
+</html>

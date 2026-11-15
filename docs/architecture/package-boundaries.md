@@ -9,16 +9,16 @@ code exists yet.
 
 ## 1. Package responsibilities
 
-| Package                 | Responsibility                                                                                                                                                             |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@choreobit/core`       | Dependency root. Shared domain types, animation state model, timeline abstractions, and common runtime contracts. No internal ChoreoBit dependencies.                      |
-| `@choreobit/primitives` | Reusable visual objects: arrays, linked lists, trees, graphs, heaps, stacks, queues, matrices, pointers, edges, labels. Reusable across algorithms.                        |
-| `@choreobit/animation`  | Animation operations: interpolation, easing, transitions, sequential/parallel composition, lifecycle abstractions.                                                         |
-| `@choreobit/renderer`   | Rendering abstractions, coordinate transformations, rendering surfaces, and a pluggable backend. Backend-agnostic; a concrete backend (e.g. PixiJS) is a separate concern. |
-| `@choreobit/authoring`  | Developer-facing TypeScript API: scene authoring, animation composition, scene definitions. Expressive API inspired by Manim.                                              |
-| `@choreobit/video`      | Video production: frame rendering orchestration, audio/narration integration, video encoding, export profiles. Node.js environment.                                        |
-| `@choreobit/player`     | Browser playback runtime: playback controls, semantic stepping, seeking, code synchronization, animation definition consumption. No video authoring dependencies.          |
-| `@choreobit/react`      | Optional React integration: components for embedding ChoreoBit animations in a website. React is a peer dependency.                                                        |
+| Package                 | Responsibility                                                                                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@choreobit/core`       | Dependency root. Shared domain types, animation state model, timeline abstractions, and common runtime contracts. No internal ChoreoBit dependencies.                                               |
+| `@choreobit/primitives` | Reusable visual objects: arrays, linked lists, trees, graphs, heaps, stacks, queues, matrices, pointers, edges, labels. Reusable across algorithms.                                                 |
+| `@choreobit/animation`  | Animation operations: interpolation, easing, transitions, sequential/parallel composition, lifecycle abstractions.                                                                                  |
+| `@choreobit/renderer`   | Rendering: a Canvas 2D backend that draws a `SceneVisualState` onto a structural `Canvas2DContext`. Backend-agnostic by design; a concrete alternative backend (e.g. PixiJS) is a separate concern. |
+| `@choreobit/authoring`  | Developer-facing TypeScript API: scene authoring, animation composition, scene definitions. Expressive API inspired by Manim.                                                                       |
+| `@choreobit/video`      | Video production: frame rendering orchestration, audio/narration integration, video encoding, export profiles. Node.js environment.                                                                 |
+| `@choreobit/player`     | Browser playback runtime: playback controls, semantic stepping, seeking, code synchronization, animation definition consumption. No video authoring dependencies.                                   |
+| `@choreobit/react`      | Optional React integration: components for embedding ChoreoBit animations in a website. React is a peer dependency.                                                                                 |
 
 ## 2. Dependency graph
 
@@ -36,6 +36,7 @@ graph TD
   primitives --> core
   animation --> core
   renderer --> core
+  renderer --> animation
   authoring --> core
   authoring --> primitives
   authoring --> animation
@@ -51,7 +52,9 @@ graph TD
 ## 3. Dependency rules
 
 - `core` has **no** internal ChoreoBit dependencies. It is the acyclic root.
-- `primitives`, `animation`, and `renderer` depend only on `core`.
+- `primitives` and `animation` depend only on `core`.
+- `renderer` depends on `core` and `animation`: it draws the `SceneVisualState`
+  that `animation` produces, against a structural `Canvas2DContext`.
 - `authoring` depends on `core`, `primitives`, and `animation`.
 - `video` depends on `core` and `renderer`.
 - `player` depends on `core`, `primitives`, `animation`, and `renderer`.

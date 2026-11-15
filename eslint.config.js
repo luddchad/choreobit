@@ -28,5 +28,16 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ['examples/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        document: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        requestAnimationFrame: 'readonly',
+        console: 'readonly',
+      },
+    },
+  },
   prettier,
 );

@@ -2,7 +2,7 @@
   "name": "@choreobit/renderer",
   "version": "0.0.0",
   "private": true,
-  "description": "ChoreoBit rendering abstractions and backend-agnostic scene rendering. No backend implementation yet.",
+  "description": "ChoreoBit rendering: a backend-agnostic render contract plus a Canvas 2D backend that draws an evaluated SceneVisualState. No browser lifecycle, scheduling, or evaluation here.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -10,10 +10,29 @@
     "url": "https://github.com/luddchad/choreobit.git",
     "directory": "packages/renderer"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@choreobit/animation": "workspace:*",
     "@choreobit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3"
   }
 }

@@ -24,7 +24,7 @@ const ALLOWED = {
   '@choreobit/core': [],
   '@choreobit/primitives': ['@choreobit/core'],
   '@choreobit/animation': ['@choreobit/core'],
-  '@choreobit/renderer': ['@choreobit/core'],
+  '@choreobit/renderer': ['@choreobit/core', '@choreobit/animation'],
   '@choreobit/authoring': ['@choreobit/core', '@choreobit/primitives', '@choreobit/animation'],
   '@choreobit/video': ['@choreobit/core', '@choreobit/renderer'],
   '@choreobit/player': [
