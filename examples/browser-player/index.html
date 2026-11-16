@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChoreoBit Browser Player</title>
+    <style>
+      body {
+        margin: 0;
+        background: #10131a;
+        color: #e8eaf0;
+        font-family: system-ui, sans-serif;
+      }
+      .stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 24px;
+        gap: 16px;
+      }
+      canvas {
+        background: #1a1f2b;
+        border-radius: 8px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+      .transport {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+      }
+      .transport button {
+        background: #2a3142;
+        color: #e8eaf0;
+        border: 1px solid #3a4258;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      .transport button:hover {
+        background: #353d52;
+      }
+      .transport .readout {
+        min-width: 140px;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.85;
+      }
+      .transport label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+      }
+      .transport input[type='range'] {
+        vertical-align: middle;
+      }
+      .error {
+        color: #ff8a8a;
+        min-height: 18px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <canvas id="choreobit" width="480" height="320"></canvas>
+      <div class="transport">
+        <button id="play" type="button">Play</button>
+        <button id="restart" type="button">Restart</button>
+        <label>
+          <input id="loop" type="checkbox" checked />
+          Loop
+        </label>
+        <label>
+          Rate
+          <input id="rate" type="range" min="0.25" max="2" step="0.25" value="1" />
+          <span id="rate-value">1.00&times;</span>
+        </label>
+        <span id="time" class="readout">0.00 / 0.00s</span>
+      </div>
+      <div id="error" class="error"></div>
+    </div>
+    <!-- Map the bare specifiers to the built packages. Build first:
+          pnpm build -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@choreobit/player": "../../packages/player/dist/index.js",
+          "@choreobit/animation": "../../packages/animation/dist/index.js",
+          "@choreobit/renderer": "../../packages/renderer/dist/index.js"
+        }
+      }
+    </script>
+    <script type="module" src="./main.mjs"></script>
+  </body>
+</html>
