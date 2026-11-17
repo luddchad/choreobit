@@ -9,16 +9,16 @@ code exists yet.
 
 ## 1. Package responsibilities
 
-| Package                 | Responsibility                                                                                                                                                                                                                                                                           |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@choreobit/core`       | Dependency root. Shared domain types, animation state model, timeline abstractions, and common runtime contracts. No internal ChoreoBit dependencies.                                                                                                                                    |
-| `@choreobit/primitives` | Reusable visual objects: arrays, linked lists, trees, graphs, heaps, stacks, queues, matrices, pointers, edges, labels. Reusable across algorithms.                                                                                                                                      |
-| `@choreobit/animation`  | Animation operations: interpolation, easing, transitions, sequential/parallel composition, lifecycle abstractions.                                                                                                                                                                       |
-| `@choreobit/renderer`   | Rendering: a Canvas 2D backend that draws a `SceneVisualState` onto a structural `Canvas2DContext`. Backend-agnostic by design; a concrete alternative backend (e.g. PixiJS) is a separate concern.                                                                                      |
-| `@choreobit/authoring`  | Developer-facing TypeScript API: scene authoring, animation composition, scene definitions. Expressive API inspired by Manim.                                                                                                                                                            |
-| `@choreobit/video`      | Video production: frame rendering orchestration, audio/narration integration, video encoding, export profiles. Node.js environment.                                                                                                                                                      |
-| `@choreobit/player`     | Browser playback runtime: a frame-clock-driven animation loop (play, pause, restart, seek, loop, playback rate, subscribe) that schedules a scene's timeline once and renders each frame via `renderer`. No video authoring dependencies, no semantic stepping, no code synchronization. |
-| `@choreobit/react`      | Optional React integration: components for embedding ChoreoBit animations in a website. React is a peer dependency.                                                                                                                                                                      |
+| Package                 | Responsibility                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@choreobit/core`       | Dependency root. Shared domain types, animation state model, timeline abstractions, and common runtime contracts. No internal ChoreoBit dependencies.                                                                                                                                                                                                                                                                      |
+| `@choreobit/primitives` | Reusable visual objects: arrays, linked lists, trees, graphs, heaps, stacks, queues, matrices, pointers, edges, labels. Reusable across algorithms.                                                                                                                                                                                                                                                                        |
+| `@choreobit/animation`  | Animation operations: interpolation, easing, transitions, sequential/parallel composition, lifecycle abstractions.                                                                                                                                                                                                                                                                                                         |
+| `@choreobit/renderer`   | Rendering: a Canvas 2D backend that draws a `SceneVisualState` onto a structural `Canvas2DContext`. Backend-agnostic by design; a concrete alternative backend (e.g. PixiJS) is a separate concern.                                                                                                                                                                                                                        |
+| `@choreobit/authoring`  | Developer-facing TypeScript API: scene authoring, animation composition, scene definitions. Expressive API inspired by Manim.                                                                                                                                                                                                                                                                                              |
+| `@choreobit/video`      | Video production: frame rendering orchestration, audio/narration integration, video encoding, export profiles. Node.js environment.                                                                                                                                                                                                                                                                                        |
+| `@choreobit/player`     | Browser playback runtime: a frame-clock-driven animation loop (play, pause, restart, seek, loop, playback rate, subscribe) that schedules a scene's timeline once and renders each frame via `renderer`. Also owns the code synchronizer (`resolveCodeSync`/`createCodeSyncResolver`), which maps the player's clock to active semantic steps and source locations. No video authoring dependencies, no semantic stepping. |
+| `@choreobit/react`      | Optional React integration: components for embedding ChoreoBit animations in a website. React is a peer dependency.                                                                                                                                                                                                                                                                                                        |
 
 ## 2. Dependency graph
 
@@ -66,16 +66,17 @@ graph TD
 
 ## 4. Public API ownership
 
-| Concern                                                                                  | Owner package |
-| ---------------------------------------------------------------------------------------- | ------------- |
-| Shared domain types, state model, timeline abstractions, runtime contracts               | `core`        |
-| Visual object definitions (arrays, trees, graphs, …)                                     | `primitives`  |
-| Animation definitions (interpolation, easing, composition, lifecycle)                    | `animation`   |
-| Rendering interfaces (surface, coordinate transforms, backend contract)                  | `renderer`    |
-| Authoring abstractions (scene authoring, composition helpers)                            | `authoring`   |
-| Video-specific functionality (frame orchestration, audio, encoding, export)              | `video`       |
-| Browser playback (the animation loop: play, pause, restart, seek, loop, rate, subscribe) | `player`      |
-| React integration (embedding components)                                                 | `react`       |
+| Concern                                                                                     | Owner package |
+| ------------------------------------------------------------------------------------------- | ------------- |
+| Shared domain types, state model, timeline abstractions, runtime contracts                  | `core`        |
+| Visual object definitions (arrays, trees, graphs, …)                                        | `primitives`  |
+| Animation definitions (interpolation, easing, composition, lifecycle)                       | `animation`   |
+| Rendering interfaces (surface, coordinate transforms, backend contract)                     | `renderer`    |
+| Authoring abstractions (scene authoring, composition helpers)                               | `authoring`   |
+| Video-specific functionality (frame orchestration, audio, encoding, export)                 | `video`       |
+| Browser playback (the animation loop: play, pause, restart, seek, loop, rate, subscribe)    | `player`      |
+| Code synchronization (mapping the player's clock to active semantic steps and source lines) | `player`      |
+| React integration (embedding components)                                                    | `react`       |
 
 Rules:
 
@@ -117,6 +118,10 @@ These are illustrative call shapes only. No code is implemented.
 - **Playing back** (browser): `player` consumes a `Scene`, schedules its timeline
   once, and drives a frame clock that evaluates and renders each frame via
   `renderer`, with play/pause/restart/seek/loop/rate controls.
+- **Synchronising to source** (browser): the same `player` runs a
+  `createCodeSyncResolver` over the scene's semantic steps, mapping the player's
+  clock to the active steps and source lines a code viewer highlights — one
+  clock, no second evaluator.
 - **Embedding in a website** (browser): `react` wraps `player` in a component.
 
 ## 7. Architectural decisions and trade-offs
@@ -129,6 +134,11 @@ These are illustrative call shapes only. No code is implemented.
   dependencies.
 - **`react` is optional and a leaf.** It sits on top of `player` only, so
   non-React consumers and the core framework have no React dependency.
+- **The code synchronizer lives in `player`, not a new package.** It is driven by
+  the player's clock and reads the player's `PlayerState`, so it belongs where the
+  clock lives. It is a pure, read-only view of that clock (a `resolve` function of
+  time), never a second clock or evaluator, and introduces no new runtime or
+  third-party dependency.
 - **`authoring` depends on `primitives` and `animation`, not `renderer`.**
   Authoring produces data (animation definitions); it does not draw. Keeping
   rendering out of authoring keeps the same definition usable by both `video`

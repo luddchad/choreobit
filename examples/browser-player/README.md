@@ -1,9 +1,11 @@
 # browser-player example
 
 A minimal, dependency-free demonstration of the `@choreobit/player` controller
-driving a real animation loop in the browser. A core `Scene` is bound to a canvas
-2D context and a `requestAnimationFrame` scheduler, and a transport bar exercises
-the player's public surface: play, pause, restart, loop, and playback rate.
+driving a real animation loop in the browser, **with the code synchronizer
+wired to the same playback clock**. A core `Scene` is bound to a canvas 2D
+context and a `requestAnimationFrame` scheduler; a transport bar exercises the
+player's public surface, and a side-by-side source viewer highlights the lines
+the active semantic step maps to.
 
 ## What it shows
 
@@ -18,13 +20,27 @@ the player's public surface: play, pause, restart, loop, and playback rate.
 - A `Player` renders a **fixed** scene and **fixed** context. It schedules the
   timeline once and reuses the `TimelineSchedule` across every evaluation; it
   never mutates the scene and never re-schedules.
-- The **transport bar** is a thin projection of `PlayerState`: a `subscribe`
-  listener mirrors `status`, `currentTime`, and `duration` onto the DOM, while the
-  controls call `play`, `pause`, `restart`, `setLoop`, and `setPlaybackRate`.
-- The renderer supports `rectangle`, `circle`, and `text` objects. This scene is a
-  rectangle that sweeps horizontally over the scene duration, a stationary circle,
-  and a text label — position and opacity only (the contract carries no rotation or
-  scale).
+- The **animation is a binary search** of `23` in the sorted array
+  `[2, 5, 8, 12, 16, 23, 38, 56, 72]` (found at index 5). Three iterations:
+  `mid = 4` (`16 < 23` → `low = 5`), `mid = 6` (`38 > 23` → `high = 5`),
+  `mid = 5` (`23 == 23` → found). Each beat is a `Parallel` node on the scene
+  timeline; the `low`, `high`, and `mid` pointers and a highlight overlay move
+  with the search range.
+- **Code synchronisation.** The scene carries seven `SemanticStep`s, each bound
+  to the scene and to one or more source lines of `binary_search.py`. A
+  `createCodeSyncResolver(steps, sceneId)` is built once; a single
+  `player.subscribe` listener resolves the active step and locations from
+  `state.currentTime` and lights up the matching source lines. The highlighted
+  lines are always the lines the rendered frame corresponds to, because the
+  resolver is a pure function of the same clock the player draws.
+- The **transport bar** is a thin projection of `PlayerState`: the same
+  `subscribe` listener mirrors `status`, `currentTime`, and `duration` onto the
+  DOM and feeds the resolver, while the controls call `play`, `pause`, `restart`,
+  `setLoop`, and `setPlaybackRate`.
+- The renderer supports `rectangle`, `circle`, and `text` objects. This scene is
+  a title, nine `text` array cells, three `text` pointers, a `rectangle`
+  highlight overlay, and a result label — position and the `text`/`highlight`
+  channels only (the contract carries no rotation or scale).
 
 ## Run it
 
@@ -43,15 +59,19 @@ server, not `file://`):
 npx serve
 ```
 
-Open `http://localhost:3000/examples/browser-player/index.html`, then press **Play**.
+Open `http://localhost:3000/examples/browser-player/index.html`, then press
+**Play**. As the search runs, the `binary_search.py` source on the right lights
+up the line(s) the current iteration is on.
 
 ## Files
 
-- `index.html` — the canvas, the transport controls, and the import map that binds
-  `@choreobit/player`, `@choreobit/animation`, and `@choreobit/renderer` to their
-  built `dist/index.js`.
-- `main.mjs` — builds a `Player` over a sweeping-rectangle scene with a
-  `requestAnimationFrame` scheduler, then wires the transport controls to its
-  public methods and a `PlayerState` subscription.
+- `index.html` — the two-panel layout: the canvas and transport on the left, the
+  source viewer on the right; plus the import map that binds `@choreobit/player`,
+  `@choreobit/animation`, and `@choreobit/renderer` to their built `dist/index.js`.
+- `main.mjs` — builds the binary-search scene and its semantic steps, creates a
+  `Player` with a `requestAnimationFrame` scheduler, builds the source viewer from
+  the `binary_search.py` source lines, and wires one `player.subscribe` listener to
+  the transport and to a `createCodeSyncResolver`.
 
-This example uses no PixiJS, React, WebGL, or FFmpeg.
+This example uses no PixiJS, React, WebGL, FFmpeg, code-editor dependency, or
+second playback clock.

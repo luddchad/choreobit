@@ -8,9 +8,9 @@ rendering draws one frame, the player runs the loop that _produces_ frames over
 time: it schedules a `Scene`'s timeline once, then advances a clock, evaluates a
 frame, and renders it — repeating until the scene ends or loops.
 
-Status: browser playback controller (Task 0.7). No React, no video export, no
-source-code synchronization, no semantic stepping. The player source is
-browser-free: the only browser reference is inside
+Status: browser playback controller (Task 0.7), with the code synchronizer added in
+Task 0.8 (`code-synchronization.md`). No React, no video export, no semantic
+stepping. The player source is browser-free: the only browser reference is inside
 `createRequestAnimationFrameScheduler`, and it is reached through a capability
 check on `globalThis`, so the module type-checks with no DOM `lib` and still runs
 in a browser.
@@ -274,8 +274,8 @@ advances and renders; it never decides what clock drives it.
 
 - Semantic stepping (jumping to meaningful moments in a scene) — out of scope for
   this task; a future concern built on top of the schedule.
-- Source-code synchronization (linking frames to editor state) — out of scope;
-  the player plays a scene, not an authoring session.
+- Source-code synchronization (linking frames to editor state) — delivered in
+  Task 0.8 as the code synchronizer; see `code-synchronization.md`.
 - A React binding (`@choreobit/react`) that wraps a `Player` in a component —
   decided when `react` is built.
 - A seek UI (a draggable scrubber) — the `seek` API exists and is exercised by

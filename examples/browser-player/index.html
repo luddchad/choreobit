@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChoreoBit Browser Player</title>
+    <title>ChoreoBit · Binary Search</title>
     <style>
       body {
         margin: 0;
@@ -13,21 +13,41 @@
       }
       .stage {
         display: flex;
-        flex-direction: column;
-        align-items: center;
+        gap: 24px;
         padding: 24px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .panel {
+        background: #161b26;
+        border: 1px solid #232a38;
+        border-radius: 10px;
+        padding: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.6;
+      }
+      .left {
+        display: flex;
+        flex-direction: column;
         gap: 16px;
       }
       canvas {
         background: #1a1f2b;
         border-radius: 8px;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
       }
       .transport {
         display: flex;
         align-items: center;
         gap: 12px;
         font-size: 14px;
+        flex-wrap: wrap;
       }
       .transport button {
         background: #2a3142;
@@ -41,7 +61,7 @@
         background: #353d52;
       }
       .transport .readout {
-        min-width: 140px;
+        min-width: 120px;
         font-variant-numeric: tabular-nums;
         opacity: 0.85;
       }
@@ -59,26 +79,83 @@
         min-height: 18px;
         font-size: 13px;
       }
+      .caption {
+        font-size: 13px;
+        opacity: 0.8;
+        min-height: 18px;
+      }
+      .right {
+        flex: 1 1 420px;
+        min-width: 360px;
+      }
+      pre.code {
+        margin: 0;
+        font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        background: #10131a;
+        border-radius: 6px;
+        padding: 12px;
+        overflow: auto;
+      }
+      .line {
+        display: flex;
+        gap: 16px;
+        white-space: pre;
+        padding: 0 8px;
+        border-left: 2px solid transparent;
+      }
+      .line .num {
+        color: #4a5468;
+        user-select: none;
+        text-align: right;
+        min-width: 2ch;
+      }
+      .line.active {
+        background: #2a2410;
+        border-left-color: #ffcc00;
+        color: #ffe9a3;
+      }
+      .line.active .num {
+        color: #ffcc00;
+      }
+      .legend {
+        margin-top: 12px;
+        font-size: 12px;
+        opacity: 0.7;
+      }
     </style>
   </head>
   <body>
     <div class="stage">
-      <canvas id="choreobit" width="480" height="320"></canvas>
-      <div class="transport">
-        <button id="play" type="button">Play</button>
-        <button id="restart" type="button">Restart</button>
-        <label>
-          <input id="loop" type="checkbox" checked />
-          Loop
-        </label>
-        <label>
-          Rate
-          <input id="rate" type="range" min="0.25" max="2" step="0.25" value="1" />
-          <span id="rate-value">1.00&times;</span>
-        </label>
-        <span id="time" class="readout">0.00 / 0.00s</span>
+      <div class="panel left">
+        <h2>Animation</h2>
+        <canvas id="choreobit" width="600" height="360"></canvas>
+        <div id="caption" class="caption"></div>
+        <div class="transport">
+          <button id="play" type="button">Play</button>
+          <button id="restart" type="button">Restart</button>
+          <label>
+            <input id="loop" type="checkbox" checked />
+            Loop
+          </label>
+          <label>
+            Rate
+            <input id="rate" type="range" min="0.25" max="2" step="0.25" value="1" />
+            <span id="rate-value">1.00&times;</span>
+          </label>
+          <span id="time" class="readout">0.00 / 0.00s</span>
+        </div>
+        <div id="error" class="error"></div>
       </div>
-      <div id="error" class="error"></div>
+      <div class="panel right">
+        <h2>Source · binary_search.py</h2>
+        <pre id="code" class="code"></pre>
+        <div class="legend">
+          Highlighted lines are the source the active semantic step maps to. Each line of the
+          animation is bound to one or more steps, and each step to one or more source lines.
+        </div>
+      </div>
     </div>
     <!-- Map the bare specifiers to the built packages. Build first:
           pnpm build -->

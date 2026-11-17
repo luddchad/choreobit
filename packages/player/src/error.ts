@@ -90,3 +90,37 @@ export class PlayerError extends Error {
 export function isPlayerError(value: unknown): value is PlayerError {
   return value instanceof PlayerError;
 }
+
+/**
+ * The error the code synchronizer throws for malformed metadata.
+ *
+ * A {@link CodeSyncError} is a usage failure, not a playback failure: it is
+ * thrown synchronously from the pure resolver when the supplied semantic steps or
+ * source locations are malformed (a non-finite or negative step time, an
+ * inverted `end`-before-`start` interval, a non-positive `line`, …). It is a
+ * distinct type from {@link PlayerError} so a host can tell a bad mapping apart
+ * from a playback problem without branching on the code.
+ */
+export class CodeSyncError extends Error {
+  /** The class of failure. */
+  readonly code = 'invalid' as const;
+
+  /**
+   * Build a code-sync error from its message and optional cause. The `message`
+   * doubles as the `Error` message; `cause` is passed through to the `Error`
+   * superclass so it is available both as `error.cause` and via `error.stack`.
+   */
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
+    this.name = 'CodeSyncError';
+  }
+}
+
+/**
+ * A convenience guard: is this error a {@link CodeSyncError}?
+ *
+ * Use it to distinguish a code-sync failure from any other thrown value.
+ */
+export function isCodeSyncError(value: unknown): value is CodeSyncError {
+  return value instanceof CodeSyncError;
+}
