@@ -1,4 +1,4 @@
-import type { Scene } from '@choreobit/core';
+import type { Scene, SemanticStep } from '@choreobit/core';
 import type { Canvas2DContext, RenderOptions } from '@choreobit/renderer';
 import type { PlayerError } from './error';
 
@@ -98,6 +98,19 @@ export interface PlayerOptions {
    * the status to `'ended'`.
    */
   loop?: boolean;
+  /**
+   * The semantic steps a host wants to step through, in the scene's own
+   * timeline.
+   *
+   * When supplied, the player builds a {@link import('./stepping').SemanticStepper}
+   * from these steps (scoped to the scene's `id`) and exposes
+   * {@link Player.stepForward} / {@link Player.stepBackward}, which jump to the
+   * next or previous step boundary by seeking the single playback clock. Stepping
+   * is navigation over the *same* evaluation path: a step just moves the clock to
+   * a step's `start`, so it never introduces a second animation engine. Absent
+   * (or empty) leaves the player with no steps to navigate.
+   */
+  semanticSteps?: readonly SemanticStep[];
 }
 
 /**

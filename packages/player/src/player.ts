@@ -4,6 +4,8 @@ import type { TimelineSchedule } from '@choreobit/animation';
 import { renderScene } from '@choreobit/renderer';
 import type { Canvas2DContext, RenderOptions } from '@choreobit/renderer';
 import { PlayerError } from './error';
+import { createSemanticStepper } from './stepping';
+import type { SemanticStepper } from './stepping';
 import type {
   FrameHandle,
   FrameScheduler,
@@ -39,6 +41,11 @@ export class Player {
   readonly schedule: TimelineSchedule;
   /** The scene's duration, the maximum evaluation time. */
   readonly duration: number;
+  /**
+   * The distinct semantic step boundaries (step start times), sorted ascending
+   * and frozen. Empty when the player was built without {@link PlayerOptions.semanticSteps}.
+   */
+  readonly stopTimes: readonly number[];
 
   private status: PlayerState['status'] = 'paused';
   private currentTime = 0;
@@ -49,13 +56,16 @@ export class Player {
   private pendingHandle: FrameHandle | null = null;
   private destroyed = false;
   private readonly listeners = new Set<PlayerStateListener>();
+  private readonly stepper: SemanticStepper;
 
   /**
    * Build a player.
    *
    * The scene's timeline is scheduled once here, so the schedule is reused across
    * every evaluation rather than recomputed per frame. `playbackRate` defaults to
-   * `1` and `loop` to `false` when not supplied.
+   * `1` and `loop` to `false` when not supplied. When `semanticSteps` are given,
+   * a {@link SemanticStepper} is built from them (scoped to the scene) so the
+   * player can step between beats; absent steps leave an empty stepper.
    */
   constructor(options: PlayerOptions) {
     this.scene = options.scene;
@@ -66,6 +76,8 @@ export class Player {
     this.duration = this.schedule.duration;
     this.playbackRate = options.playbackRate ?? 1;
     this.loop = options.loop ?? false;
+    this.stepper = createSemanticStepper(options.semanticSteps ?? [], this.scene.id, this.duration);
+    this.stopTimes = this.stepper.stopTimes;
   }
 
   /**
@@ -133,6 +145,59 @@ export class Player {
     this.lastFrameMs = null;
     this.status = 'paused';
     this.renderAt(this.currentTime);
+  }
+
+  /**
+   * Step forward to the next semantic beat.
+   *
+   * Seeks to the smallest step boundary strictly after the current time. Because
+   * the comparison is strict, a position that sits exactly on a boundary advances
+   * to the *following* one rather than staying. The step is reached with the
+   * player's ordinary {@link seek}, so it cancels any pending frame, pauses, and
+   * renders the new frame through the single evaluation path. Returns `false`
+   * (without seeking) when there is no later boundary.
+   */
+  stepForward(): boolean {
+    this.assertAlive();
+    const target = this.stepper.nextStop(this.currentTime);
+    if (target === null) return false;
+    this.seek(target);
+    return true;
+  }
+
+  /**
+   * Step backward to the previous semantic beat.
+   *
+   * Seeks to the largest step boundary strictly before the current time, mirroring
+   * {@link stepForward} in the other direction. Returns `false` (without seeking)
+   * when there is no earlier boundary.
+   */
+  stepBackward(): boolean {
+    this.assertAlive();
+    const target = this.stepper.previousStop(this.currentTime);
+    if (target === null) return false;
+    this.seek(target);
+    return true;
+  }
+
+  /**
+   * Whether {@link stepForward} would advance.
+   *
+   * A pure read of the current position against the stops; it does not touch the
+   * clock or render, so it is safe to poll from a UI without disturbing playback.
+   */
+  hasNextStep(): boolean {
+    return this.stepper.hasNext(this.currentTime);
+  }
+
+  /**
+   * Whether {@link stepBackward} would advance.
+   *
+   * A pure read of the current position against the stops; it does not touch the
+   * clock or render, so it is safe to poll from a UI without disturbing playback.
+   */
+  hasPreviousStep(): boolean {
+    return this.stepper.hasPrevious(this.currentTime);
   }
 
   /**

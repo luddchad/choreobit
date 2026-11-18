@@ -35,8 +35,13 @@ the active semantic step maps to.
   resolver is a pure function of the same clock the player draws.
 - The **transport bar** is a thin projection of `PlayerState`: the same
   `subscribe` listener mirrors `status`, `currentTime`, and `duration` onto the
-  DOM and feeds the resolver, while the controls call `play`, `pause`, `restart`,
-  `setLoop`, and `setPlaybackRate`.
+  DOM and feeds the resolver, while the controls call `play`, `pause`,
+  `restart`, `setLoop`, and `setPlaybackRate`.
+- **Semantic stepping.** The same `steps` feed `Player`'s `semanticSteps`, so the
+  transport's **Prev**/**Next** buttons call `player.stepBackward`/`stepForward`,
+  jumping the single clock to the next or previous beat's start time (a `seek`),
+  and a `beat N of M` readout counts the stops passed. Stepping never starts a
+  second clock: it walks the existing `seek` path.
 - The renderer supports `rectangle`, `circle`, and `text` objects. This scene is
   a title, nine `text` array cells, three `text` pointers, a `rectangle`
   highlight overlay, and a result label — position and the `text`/`highlight`

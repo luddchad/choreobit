@@ -36,8 +36,9 @@ It does **not**:
   side;
 - mutate the scene or re-schedule it — the schedule is computed once at
   construction and reused across every frame;
-- perform semantic stepping, code synchronization, or any authoring-side
-  concern — it plays a fixed scene.
+- perform code synchronization or any authoring-side concern — it plays a fixed
+  scene. Semantic stepping is a thin navigation over the existing `seek` path,
+  not a second clock or evaluator.
 
 The player is the boundary between the framework's pure core and a real
 animation loop. Everything before it (scheduling, evaluation, rendering) is
@@ -272,8 +273,8 @@ advances and renders; it never decides what clock drives it.
 
 ## 9. Deferred
 
-- Semantic stepping (jumping to meaningful moments in a scene) — out of scope for
-  this task; a future concern built on top of the schedule.
+- Semantic stepping (jumping to meaningful moments in a scene) — delivered in
+  Task 0.9 as `stepForward`/`stepBackward` on the player; see `stepping.ts`.
 - Source-code synchronization (linking frames to editor state) — delivered in
   Task 0.8 as the code synchronizer; see `code-synchronization.md`.
 - A React binding (`@choreobit/react`) that wraps a `Player` in a component —

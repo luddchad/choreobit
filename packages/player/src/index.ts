@@ -17,3 +17,5 @@ export { createRequestAnimationFrameScheduler } from './scheduler';
 export { Player } from './player';
 export { createCodeSyncResolver, resolveCodeSync, resolveSteps } from './code-sync';
 export type { CodeSyncResolution, CodeSyncResolver } from './code-sync';
+export { createSemanticStepper, resolveStepStops } from './stepping';
+export type { SemanticStepper } from './stepping';

@@ -172,7 +172,9 @@ introduces none.
 ## 6. What it is not
 
 - It is **not** semantic _stepping_ — it does not advance or jump time; it only
-  reports what is active at a given time. Stepping remains a deferred concern.
+  reports what is active at a given time. Stepping is a sibling concern
+  (`stepping.ts`), built from the same steps but answering the inverse question:
+  "what is the next (or previous) beat?" rather than "what is active now?".
 - It is **not** a code editor or a syntax highlighter — it maps time to line
   numbers; painting (and any language-aware highlighting) is the viewer's job.
 - It is **not** a second clock or a second evaluator — it reads the player's
@@ -180,8 +182,6 @@ introduces none.
 
 ## 7. Deferred
 
-- Semantic stepping (jumping to a step) — a future concern built on top of the
-  resolver, which already names the active step at any time.
 - A language-aware code viewer (tokenized highlighting) — a consumer concern;
   the resolver supplies line numbers, the viewer supplies the rendering.
 - Cross-scene scrubbing UI — the resolver resolves one scene at a time; a

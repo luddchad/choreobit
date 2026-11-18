@@ -68,8 +68,8 @@ const RESULT_Y = 310;
 const TITLE_Y = 50;
 const cellX = (index) => 60 + index * 60;
 
-// The scene's length in seconds. The seven semantic steps tile [0, 10.5).
-const duration = 10.5;
+// The scene's length in seconds. The seven semantic steps tile [0, 10).
+const duration = 10;
 
 // Build the nine array cells as `text` objects, plus the three pointers (low,
 // high, mid), a moving highlight overlay that sits under the current mid cell,
@@ -367,13 +367,16 @@ const resolver = createCodeSyncResolver(steps, 'binary-search');
 //
 // The player binds the scene, the context, the render options, and a real
 // `requestAnimationFrame` scheduler. The schedule is computed once inside the
-// constructor and reused across every evaluation.
+// constructor and reused across every evaluation. The same `steps` feed the
+// player's semantic stepping, so the Prev/Next transport controls move the
+// single playback clock between the algorithm's beats.
 const player = new Player({
   scene,
   context,
   renderOptions: { width, height, background: '#1a1f2b' },
   frameScheduler: createRequestAnimationFrameScheduler(),
   loop: true,
+  semanticSteps: steps,
 });
 
 // --- Code viewer ----------------------------------------------------------
@@ -436,11 +439,15 @@ const rateSlider = document.getElementById('rate');
 const rateValue = document.getElementById('rate-value');
 const timeReadout = document.getElementById('time');
 const errorReadout = document.getElementById('error');
+const prevButton = document.getElementById('step-back');
+const nextButton = document.getElementById('step-forward');
+const stepReadout = document.getElementById('step');
 
 // One listener mirrors the single PlayerState onto every UI surface: the
-// transport readout, the error slot, and — through the resolver — the code
-// viewer. Because the resolver is pure and a function of `state.currentTime`,
-// the highlighted lines are exactly the lines the rendered frame corresponds to.
+// transport readout, the error slot, the step indicator, and — through the
+// resolver — the code viewer. Because the resolver is pure and a function of
+// `state.currentTime`, the highlighted lines are exactly the lines the rendered
+// frame corresponds to.
 player.subscribe((state) => {
   playButton.textContent = state.status === 'playing' ? 'Pause' : 'Play';
   timeReadout.textContent = `${state.currentTime.toFixed(2)} / ${state.duration.toFixed(2)}s`;
@@ -450,6 +457,19 @@ player.subscribe((state) => {
     errorReadout.textContent = '';
   }
   applyResolution(resolver.resolve(state.currentTime));
+
+  // The step indicator counts how many stops the current time has reached. A time
+  // exactly on a stop counts as having reached it, so a forward step to a new
+  // beat is reflected immediately.
+  let reached = 0;
+  for (const stop of player.stopTimes) {
+    if (state.currentTime + 1e-9 >= stop) {
+      reached += 1;
+    }
+  }
+  stepReadout.textContent = `beat ${reached} of ${player.stopTimes.length}`;
+  prevButton.disabled = !player.hasPreviousStep();
+  nextButton.disabled = !player.hasNextStep();
 });
 
 playButton.addEventListener('click', () => {
@@ -469,6 +489,12 @@ rateSlider.addEventListener('input', () => {
   player.setPlaybackRate(rate);
   rateValue.textContent = `${rate.toFixed(2)}\u00d7`;
 });
+
+// Prev / Next walk the single clock between the algorithm's beats. Each call is
+// a `seek`, so it pauses playback and renders the new frame; the subscribe
+// listener above then refreshes the readout and the code highlight.
+prevButton.addEventListener('click', () => player.stepBackward());
+nextButton.addEventListener('click', () => player.stepForward());
 
 // Render the first frame so the canvas is not blank while paused, and light the
 // first step's source line. The subscribe() above keeps both in step.
