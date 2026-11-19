@@ -2,7 +2,7 @@
   "name": "@choreobit/video",
   "version": "0.0.0",
   "private": true,
-  "description": "ChoreoBit video production: frame orchestration, audio/narration, and encoding. No implementation yet.",
+  "description": "ChoreoBit video production: deterministic frame rendering of an AnimationDefinition onto a Canvas 2D context, at a chosen frame rate. No encoding, audio, or narration yet.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -10,11 +10,30 @@
     "url": "https://github.com/luddchad/choreobit.git",
     "directory": "packages/video"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@choreobit/animation": "workspace:*",
     "@choreobit/core": "workspace:*",
     "@choreobit/renderer": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3"
   }
 }

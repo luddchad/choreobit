@@ -13,3 +13,9 @@ HTTP.
   `@choreobit/authoring` + `@choreobit/primitives`, validated with
   `validateAnimationDefinition`, and shown next to a source viewer the
   synchronizer keeps in step with the same clock.
+- [`video-render`](./video-render/) — `@choreobit/video`'s `createFrameRenderer`
+  producing a deterministic filmstrip offline: a two-scene `AnimationDefinition`
+  authored with `@choreobit/authoring` + `@choreobit/primitives` is rendered to a
+  Canvas 2D context by random access, one sampled frame per tile. No clock, no
+  `requestAnimationFrame` — the production end of the pipeline a downstream encoder
+  would consume.

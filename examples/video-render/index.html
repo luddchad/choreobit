@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChoreoBit Video Render</title>
+    <style>
+      body {
+        margin: 0;
+        background: #10131a;
+        color: #e8eaf0;
+        font-family: system-ui, sans-serif;
+      }
+      .stage {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 24px;
+        align-items: center;
+      }
+      .caption {
+        max-width: 640px;
+        font-size: 13px;
+        line-height: 1.6;
+        opacity: 0.75;
+        text-align: center;
+      }
+      canvas {
+        background: #1a1f2b;
+        border-radius: 8px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+      #error {
+        color: #ff8a8a;
+        min-height: 18px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <p class="caption">
+        A deterministic filmstrip of a two-scene animation, produced offline with
+        <code>@choreobit/video</code>. Frames are sampled at evenly spaced times and rendered with
+        random access — no animation loop, no encoder, no audio. Each frame is a pure function of
+        its index, so the strip is reproducible.
+      </p>
+      <canvas id="filmstrip"></canvas>
+      <div id="error"></div>
+    </div>
+    <!-- Map the bare specifiers to the built packages. Build first:
+          pnpm build -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@choreobit/core": "../../packages/core/dist/index.js",
+          "@choreobit/primitives": "../../packages/primitives/dist/index.js",
+          "@choreobit/animation": "../../packages/animation/dist/index.js",
+          "@choreobit/renderer": "../../packages/renderer/dist/index.js",
+          "@choreobit/authoring": "../../packages/authoring/dist/index.js",
+          "@choreobit/video": "../../packages/video/dist/index.js"
+        }
+      }
+    </script>
+    <script type="module" src="./main.mjs"></script>
+  </body>
+</html>
