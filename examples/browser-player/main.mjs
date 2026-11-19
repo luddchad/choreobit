@@ -13,15 +13,33 @@
 // from one `PlayerState`, so the highlighted lines are always the lines the frame
 // the player draws corresponds to.
 //
-// Everything the player imports is pulled from the *built* packages through the
-// import map, so this is a genuine end-to-end use of the published surface. The
-// player is browser-free itself: the canvas, its context, and the
-// `requestAnimationFrame` adapter live here, on the consumer side.
+// The animation itself is assembled with the `@choreobit/authoring` builders —
+// `defineAnimation`, `defineScene`, `sequence`/`parallel`, `move`/`set`, and
+// `semanticStep`/`sourceCode` — over the `@choreobit/primitives` object
+// constructors (`text`, `rectangle`). The result is an `AnimationDefinition` that
+// runs through the very same `@choreobit/animation` schedule + evaluate and
+// `@choreobit/renderer` pass as any other definition. Everything the player
+// imports is pulled from the *built* packages through the import map, so this is a
+// genuine end-to-end use of the published surface. The player is browser-free
+// itself: the canvas, its context, and the `requestAnimationFrame` adapter live
+// here, on the consumer side.
 import {
   Player,
   createRequestAnimationFrameScheduler,
   createCodeSyncResolver,
 } from '@choreobit/player';
+import {
+  defineAnimation,
+  defineScene,
+  parallel,
+  move,
+  set,
+  semanticStep,
+  sourceCode,
+  rectangle,
+  text,
+  validateAnimationDefinition,
+} from '@choreobit/authoring';
 
 const canvas = document.getElementById('choreobit');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -68,96 +86,90 @@ const RESULT_Y = 310;
 const TITLE_Y = 50;
 const cellX = (index) => 60 + index * 60;
 
-// The scene's length in seconds. The seven semantic steps tile [0, 10).
-const duration = 10;
+const TEXT_FONT = 'system-ui, sans-serif';
 
-// Build the nine array cells as `text` objects, plus the three pointers (low,
-// high, mid), a moving highlight overlay that sits under the current mid cell,
-// and a result label. Each object seeds from its initial state; the `move` and
-// `set` operations below drive their position over the scene duration. The
-// player never mutates this scene — it schedules the timeline once and evaluates
-// fresh snapshots per frame.
-const cellObjects = ARRAY.map((value, index) => ({
-  id: `cell-${index}`,
-  type: 'text',
-  state: {
+// --- The scene, built from primitives -------------------------------------
+//
+// Each visual object is a `@choreobit/primitives` constructor call producing a
+// lean `VisualObject`: nine `text` array cells, three `text` pointers (low, high,
+// mid), a `rectangle` highlight overlay under the current mid cell, and a title
+// and result `text` label. The `move` and `set` operations below drive their
+// position over the scene duration. The player never mutates this scene — it
+// schedules the timeline once and evaluates fresh snapshots per frame.
+const cellObjects = ARRAY.map((value, index) =>
+  text(`cell-${index}`, String(value), {
     position: { x: cellX(index), y: CELL_Y },
-    properties: {
-      text: String(value),
-      color: '#c7d0e6',
-      fontSize: 20,
-      fontFamily: 'system-ui, sans-serif',
-    },
-  },
-  children: [],
-}));
+    properties: { color: '#c7d0e6', fontSize: 20, fontFamily: TEXT_FONT },
+  }),
+);
 
-const highlightOverlay = {
-  id: 'hl',
-  type: 'rectangle',
-  state: {
-    position: { x: cellX(0), y: CELL_Y },
-    properties: {
-      width: 52,
-      height: 52,
-      fill: 'rgba(255, 204, 0, 0.18)',
-      stroke: '#ffcc00',
-      lineWidth: 2,
-    },
+const highlightOverlay = rectangle('hl', {
+  position: { x: cellX(0), y: CELL_Y },
+  properties: {
+    width: 52,
+    height: 52,
+    fill: 'rgba(255, 204, 0, 0.18)',
+    stroke: '#ffcc00',
+    lineWidth: 2,
   },
-  children: [],
-};
-
-const pointer = (id, label, index, color) => ({
-  id,
-  type: 'text',
-  state: {
-    position: { x: cellX(index), y: POINTER_Y },
-    properties: {
-      text: label,
-      color,
-      fontSize: 15,
-      fontFamily: 'system-ui, sans-serif',
-    },
-  },
-  children: [],
 });
 
-const resultLabel = {
-  id: 'result',
-  type: 'text',
-  state: {
-    position: { x: width / 2, y: RESULT_Y },
-    properties: {
-      text: 'searching\u2026',
-      color: '#9fb3d1',
-      fontSize: 18,
-      fontFamily: 'system-ui, sans-serif',
-      textAlign: 'center',
-    },
-  },
-  children: [],
-};
+const pointer = (id, label, index, color) =>
+  text(id, label, {
+    position: { x: cellX(index), y: POINTER_Y },
+    properties: { color, fontSize: 15, fontFamily: TEXT_FONT },
+  });
 
-const scene = {
+const resultLabel = text('result', 'searching\u2026', {
+  position: { x: width / 2, y: RESULT_Y },
+  properties: {
+    color: '#9fb3d1',
+    fontSize: 18,
+    fontFamily: TEXT_FONT,
+    textAlign: 'center',
+  },
+});
+
+const title = text('title', `binary_search(a, ${TARGET})`, {
+  position: { x: width / 2, y: TITLE_Y },
+  properties: {
+    color: '#e7edf7',
+    fontSize: 22,
+    fontFamily: TEXT_FONT,
+    textAlign: 'center',
+  },
+});
+
+// The timeline is seven beats, each a `parallel` of the operations that move on
+// that beat. Iteration 1: mid = 4 (value 16) < 23 -> low = 5. Iteration 2:
+// mid = 6 (value 38) > 23 -> high = 5. Iteration 3: mid = 5 (value 23) == 23
+// -> found. The seven semantic steps tile [0, 10).
+const nodes = [
+  parallel(
+    1.5,
+    move('op-mid-move-1', 'ptr-mid', { x: cellX(4), y: POINTER_Y }, 1),
+    move('op-hl-move-1', 'hl', { x: cellX(4), y: CELL_Y }, 1),
+  ),
+  parallel(3, move('op-low-move-1', 'ptr-low', { x: cellX(5), y: POINTER_Y }, 1)),
+  parallel(
+    4.5,
+    move('op-mid-move-2', 'ptr-mid', { x: cellX(6), y: POINTER_Y }, 1),
+    move('op-hl-move-2', 'hl', { x: cellX(6), y: CELL_Y }, 1),
+  ),
+  parallel(6, move('op-high-move-2', 'ptr-high', { x: cellX(5), y: POINTER_Y }, 1)),
+  parallel(
+    7.5,
+    move('op-mid-move-3', 'ptr-mid', { x: cellX(5), y: POINTER_Y }, 1),
+    move('op-hl-move-3', 'hl', { x: cellX(5), y: CELL_Y }, 1),
+  ),
+  parallel(9, set('op-result', 'result', 'text', `found ${TARGET} at index 5`, 1)),
+];
+
+const scene = defineScene({
   id: 'binary-search',
-  duration,
+  duration: 10,
   objects: [
-    {
-      id: 'title',
-      type: 'text',
-      state: {
-        position: { x: width / 2, y: TITLE_Y },
-        properties: {
-          text: `binary_search(a, ${TARGET})`,
-          color: '#e7edf7',
-          fontSize: 22,
-          fontFamily: 'system-ui, sans-serif',
-          textAlign: 'center',
-        },
-      },
-      children: [],
-    },
+    title,
     ...cellObjects,
     highlightOverlay,
     pointer('ptr-low', 'low', 0, '#7aa2ff'),
@@ -165,130 +177,23 @@ const scene = {
     pointer('ptr-mid', 'mid', 0, '#ffcc00'),
     resultLabel,
   ],
-  timeline: {
-    nodes: [
-      // Iteration 1: mid = 4 (value 16) < 23 -> low = 5.
-      {
-        kind: 'parallel',
-        startAt: 1.5,
-        operations: [
-          {
-            id: 'op-mid-move-1',
-            type: 'move',
-            target: 'ptr-mid',
-            duration: 1,
-            params: { x: cellX(4), y: POINTER_Y },
-          },
-          {
-            id: 'op-hl-move-1',
-            type: 'move',
-            target: 'hl',
-            duration: 1,
-            params: { x: cellX(4), y: CELL_Y },
-          },
-        ],
-      },
-      {
-        kind: 'parallel',
-        startAt: 3,
-        operations: [
-          {
-            id: 'op-low-move-1',
-            type: 'move',
-            target: 'ptr-low',
-            duration: 1,
-            params: { x: cellX(5), y: POINTER_Y },
-          },
-        ],
-      },
-      // Iteration 2: mid = 6 (value 38) > 23 -> high = 5.
-      {
-        kind: 'parallel',
-        startAt: 4.5,
-        operations: [
-          {
-            id: 'op-mid-move-2',
-            type: 'move',
-            target: 'ptr-mid',
-            duration: 1,
-            params: { x: cellX(6), y: POINTER_Y },
-          },
-          {
-            id: 'op-hl-move-2',
-            type: 'move',
-            target: 'hl',
-            duration: 1,
-            params: { x: cellX(6), y: CELL_Y },
-          },
-        ],
-      },
-      {
-        kind: 'parallel',
-        startAt: 6,
-        operations: [
-          {
-            id: 'op-high-move-2',
-            type: 'move',
-            target: 'ptr-high',
-            duration: 1,
-            params: { x: cellX(5), y: POINTER_Y },
-          },
-        ],
-      },
-      // Iteration 3: mid = 5 (value 23) == 23 -> found.
-      {
-        kind: 'parallel',
-        startAt: 7.5,
-        operations: [
-          {
-            id: 'op-mid-move-3',
-            type: 'move',
-            target: 'ptr-mid',
-            duration: 1,
-            params: { x: cellX(5), y: POINTER_Y },
-          },
-          {
-            id: 'op-hl-move-3',
-            type: 'move',
-            target: 'hl',
-            duration: 1,
-            params: { x: cellX(5), y: CELL_Y },
-          },
-        ],
-      },
-      {
-        kind: 'parallel',
-        startAt: 9,
-        operations: [
-          {
-            id: 'op-result',
-            type: 'set',
-            target: 'result',
-            duration: 1,
-            params: { name: 'text', value: `found ${TARGET} at index 5` },
-          },
-        ],
-      },
-    ],
-  },
-};
+  nodes,
+});
 
 // The semantic steps: one per algorithmic beat, each bound to the scene and to
 // the source line(s) that beat covers. Several beats map onto the same lines
 // (every iteration re-runs `while low <= high` and `mid = (low + high) // 2`),
 // which the de-duplicating resolver handles.
 const steps = [
-  {
-    id: 'step-init',
+  semanticStep('step-init', {
     sceneId: 'binary-search',
     description: 'Initialise low and high at the ends of the array.',
     start: 0,
     end: 1.5,
     operations: [],
     sourceLocations: [{ line: 2, description: 'low, high = 0, len(a) - 1' }],
-  },
-  {
-    id: 'step-mid-1',
+  }),
+  semanticStep('step-mid-1', {
     sceneId: 'binary-search',
     description: 'Iteration 1: compute mid = 4 and compare a[mid] with the target.',
     start: 1.5,
@@ -298,9 +203,8 @@ const steps = [
       { line: 4, description: 'while low <= high' },
       { line: 5, description: 'mid = (low + high) // 2' },
     ],
-  },
-  {
-    id: 'step-narrow-low',
+  }),
+  semanticStep('step-narrow-low', {
     sceneId: 'binary-search',
     description: 'a[4] = 16 is below 23, so discard the left half: low = mid + 1.',
     start: 3,
@@ -310,9 +214,8 @@ const steps = [
       { line: 8, description: 'if a[mid] < target' },
       { line: 9, description: 'low = mid + 1' },
     ],
-  },
-  {
-    id: 'step-mid-2',
+  }),
+  semanticStep('step-mid-2', {
     sceneId: 'binary-search',
     description: 'Iteration 2: compute mid = 6 and compare a[mid] with the target.',
     start: 4.5,
@@ -322,9 +225,8 @@ const steps = [
       { line: 4, description: 'while low <= high' },
       { line: 5, description: 'mid = (low + high) // 2' },
     ],
-  },
-  {
-    id: 'step-narrow-high',
+  }),
+  semanticStep('step-narrow-high', {
     sceneId: 'binary-search',
     description: 'a[6] = 38 is above 23, so discard the right half: high = mid - 1.',
     start: 6,
@@ -334,9 +236,8 @@ const steps = [
       { line: 10, description: 'else' },
       { line: 11, description: 'high = mid - 1' },
     ],
-  },
-  {
-    id: 'step-mid-3',
+  }),
+  semanticStep('step-mid-3', {
     sceneId: 'binary-search',
     description: 'Iteration 3: compute mid = 5 and compare a[mid] with the target.',
     start: 7.5,
@@ -347,20 +248,44 @@ const steps = [
       { line: 5, description: 'mid = (low + high) // 2' },
       { line: 6, description: 'if a[mid] == target' },
     ],
-  },
-  {
-    id: 'step-found',
+  }),
+  semanticStep('step-found', {
     sceneId: 'binary-search',
     description: 'a[5] = 23 matches, so return the index.',
     start: 9,
-    end: duration,
+    end: 10,
     operations: ['op-result'],
     sourceLocations: [{ line: 7, description: 'return mid' }],
-  },
+  }),
 ];
 
-// Build a code-sync resolver once, scoped to this scene. Validation happens
-// eagerly here, so a malformed step would surface before the first frame.
+// Compose the portable definition. `duration` is left to default (the sum of the
+// scenes), so the total is authoritative and never drifts from the scene.
+const animation = defineAnimation({
+  id: 'binary-search',
+  name: 'Binary Search',
+  description: 'Binary search of 23 in a sorted array of nine values, with source sync.',
+  width,
+  height,
+  background: { kind: 'solid', color: '#1a1f2b' },
+  scenes: [scene],
+  semanticSteps: steps,
+  sourceCode: sourceCode({
+    language: 'python',
+    filename: 'binary_search.py',
+    content: SOURCE.join('\n'),
+  }),
+});
+
+// Validate the assembled definition before it reaches the player, so a malformed
+// authoring surfaces here rather than mid-playback.
+const validation = validateAnimationDefinition(animation);
+if (!validation.valid) {
+  throw new Error(`invalid animation definition: ${validation.errors.join('; ')}`);
+}
+
+// The player plays a `Scene`, so hand it the one scene of the definition. The
+// same `steps` feed both the resolver and the player's semantic stepping.
 const resolver = createCodeSyncResolver(steps, 'binary-search');
 
 // --- The player -----------------------------------------------------------
@@ -371,7 +296,7 @@ const resolver = createCodeSyncResolver(steps, 'binary-search');
 // player's semantic stepping, so the Prev/Next transport controls move the
 // single playback clock between the algorithm's beats.
 const player = new Player({
-  scene,
+  scene: animation.scenes[0],
   context,
   renderOptions: { width, height, background: '#1a1f2b' },
   frameScheduler: createRequestAnimationFrameScheduler(),

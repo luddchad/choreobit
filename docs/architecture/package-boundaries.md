@@ -90,28 +90,32 @@ Rules:
 
 ## 5. Browser versus Node.js boundaries
 
-| Package      | Environment | Rationale                                                       |
-| ------------ | ----------- | --------------------------------------------------------------- |
-| `core`       | Universal   | Pure types and contracts; no environment assumptions.           |
-| `primitives` | Universal   | Visual object definitions; no I/O.                              |
-| `animation`  | Universal   | Pure computation.                                               |
-| `renderer`   | Universal   | Backend-agnostic; a browser backend may be selected at runtime. |
-| `player`     | Browser     | Playback runtime. Must not pull in Node-only deps.              |
-| `react`      | Browser     | UI embedding. `react` is a peer dependency.                     |
-| `authoring`  | Node.js     | Authoring is a build-time authoring concern.                    |
-| `video`      | Node.js     | Frame rendering, audio, and encoding use Node APIs.             |
+| Package      | Environment | Rationale                                                                                                             |
+| ------------ | ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `core`       | Universal   | Pure types and contracts; no environment assumptions.                                                                 |
+| `primitives` | Universal   | Visual object definitions; no I/O.                                                                                    |
+| `animation`  | Universal   | Pure computation.                                                                                                     |
+| `renderer`   | Universal   | Backend-agnostic; a browser backend may be selected at runtime.                                                       |
+| `authoring`  | Universal   | Pure data builders; it depends on no Node-only package, so a built `dist/` loads in a browser (see `browser-player`). |
+| `player`     | Browser     | Playback runtime. Must not pull in Node-only deps.                                                                    |
+| `react`      | Browser     | UI embedding. `react` is a peer dependency.                                                                           |
+| `video`      | Node.js     | Frame rendering, audio, and encoding use Node APIs.                                                                   |
 
 `video` must not contaminate the browser playback runtime. `player` and `react`
 are the only browser-facing runtime packages and are checked by
-`scripts/check-deps.mjs` for absence of Node-only dependencies.
+`scripts/check-deps.mjs` for absence of Node-only dependencies. `authoring` is
+universal: its builders produce pure `core` data and it depends only on
+`core`/`primitives`/`animation` (none Node-only), so its built output is importable
+through a browser import map even though authoring is usually a build-time step.
 
 ## 6. Package interaction examples
 
 These are illustrative call shapes only. No code is implemented.
 
-- **Authoring a scene** (Node.js): `authoring` composes a `Scene` from
-  `primitives` and `animation` operations, producing an animation definition
-  owned by `core` contracts.
+- **Authoring a scene** (universal): `authoring` composes an
+  `AnimationDefinition` from `primitives` objects, `animation`-style operations,
+  semantic steps, and source code, producing a portable document owned by `core`
+  contracts that both `video` and `player` consume.
 - **Rendering a frame** (universal): `renderer` draws a scene onto a surface
   using coordinates and transforms defined in `core`/`renderer`.
 - **Producing a video** (Node.js): `video` drives `renderer` frame by frame,
@@ -144,8 +148,11 @@ These are illustrative call shapes only. No code is implemented.
   Authoring produces data (animation definitions); it does not draw. Keeping
   rendering out of authoring keeps the same definition usable by both `video`
   and `player`.
-- **`core` is the sole buildable package for now.** It keeps the CI build
-  pipeline exercised on real output; other packages add source later.
+- **Every runtime package builds a `dist/`.** `core`, `primitives`, `animation`,
+  `renderer`, `player`, and `authoring` each ship an ESM `dist/index.js` plus
+  `dist/index.d.ts`, so the CI build pipeline is exercised on real output across
+  the whole runtime chain. `video` and `react` are the only packages still
+  without source.
 - **Lightweight enforcement over a framework.** A zero-dependency script
   (`scripts/check-deps.mjs`) plus `workspace:*` declarations enforce the graph
   and the browser/Node boundary without a heavy architecture tool.

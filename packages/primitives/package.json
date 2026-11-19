@@ -1,19 +1,29 @@
 {
   "name": "@choreobit/primitives",
   "version": "0.0.0",
-  "private": true,
-  "description": "Reusable ChoreoBit visual objects (arrays, trees, graphs, and more). No implementation yet.",
   "type": "module",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/luddchad/choreobit.git",
-    "directory": "packages/primitives"
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@choreobit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3"
   }
 }

@@ -9,4 +9,7 @@ HTTP.
   hand-rolled `requestAnimationFrame` loop.
 - [`browser-player`](./browser-player/) — the `@choreobit/player` controller
   driving that same pipeline with a transport bar (play, pause, restart, loop,
-  rate).
+  rate, prev/next step). The binary-search scene is authored with
+  `@choreobit/authoring` + `@choreobit/primitives`, validated with
+  `validateAnimationDefinition`, and shown next to a source viewer the
+  synchronizer keeps in step with the same clock.

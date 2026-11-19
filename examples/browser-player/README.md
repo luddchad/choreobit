@@ -2,13 +2,23 @@
 
 A minimal, dependency-free demonstration of the `@choreobit/player` controller
 driving a real animation loop in the browser, **with the code synchronizer
-wired to the same playback clock**. A core `Scene` is bound to a canvas 2D
-context and a `requestAnimationFrame` scheduler; a transport bar exercises the
-player's public surface, and a side-by-side source viewer highlights the lines
-the active semantic step maps to.
+wired to the same playback clock**. An `AnimationDefinition` is assembled with
+the `@choreobit/authoring` builders over the `@choreobit/primitives` object
+constructors, validated with `validateAnimationDefinition`, and its scene is
+bound to a canvas 2D context and a `requestAnimationFrame` scheduler; a transport
+bar exercises the player's public surface, and a side-by-side source viewer
+highlights the lines the active semantic step maps to.
 
 ## What it shows
 
+- The **animation is authored with the published API**. The binary-search scene
+  is built with `defineScene` (from `@choreobit/authoring`) over `text` and
+  `rectangle` objects (from `@choreobit/primitives`), its beats are `parallel`
+  nodes of `move`/`set` operations, its `SemanticStep`s come from
+  `semanticStep`, and its `SourceCode` from `sourceCode` — all composed into one
+  `AnimationDefinition` by `defineAnimation`. The result runs through the very
+  same `@choreobit/animation` schedule + evaluate and `@choreobit/renderer` pass
+  as any other definition.
 - The **player is browser-free**. It owns the _logic_ of an animation loop —
   advancing time, evaluating a frame, rendering it, looping or ending — and
   delegates the _timing_ to a `FrameScheduler`. This example supplies the only
@@ -26,6 +36,9 @@ the active semantic step maps to.
   `mid = 5` (`23 == 23` → found). Each beat is a `Parallel` node on the scene
   timeline; the `low`, `high`, and `mid` pointers and a highlight overlay move
   with the search range.
+- **Validation.** Before the player is constructed, the assembled definition is
+  passed to `validateAnimationDefinition`; a malformed authoring throws here rather
+  than mid-playback.
 - **Code synchronisation.** The scene carries seven `SemanticStep`s, each bound
   to the scene and to one or more source lines of `binary_search.py`. A
   `createCodeSyncResolver(steps, sceneId)` is built once; a single
@@ -71,8 +84,10 @@ up the line(s) the current iteration is on.
 ## Files
 
 - `index.html` — the two-panel layout: the canvas and transport on the left, the
-  source viewer on the right; plus the import map that binds `@choreobit/player`,
-  `@choreobit/animation`, and `@choreobit/renderer` to their built `dist/index.js`.
+  source viewer on the right; plus an import map that binds the six built packages
+  (`@choreobit/core`, `@choreobit/primitives`, `@choreobit/authoring`,
+  `@choreobit/player`, `@choreobit/animation`, `@choreobit/renderer`) to their
+  built `dist/index.js`.
 - `main.mjs` — builds the binary-search scene and its semantic steps, creates a
   `Player` with a `requestAnimationFrame` scheduler, builds the source viewer from
   the `binary_search.py` source lines, and wires one `player.subscribe` listener to
